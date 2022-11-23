@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from empresa.models import Vagas
 from django.contrib import messages
 from django.contrib.messages import constants
+from .models import Tarefa
 
 
 def nova_vaga(request):
@@ -32,3 +33,26 @@ def nova_vaga(request):
 
     elif request.method == "GET":
         raise Http404()
+
+
+def vaga(request, id):
+    vaga = get_object_or_404(Vagas, id=id)
+    return render(request, "vaga.html", {"vaga": vaga})
+
+
+def nova_tarefa(request, id_vaga):
+    titulo = request.POST.get("titulo")
+    prioridade = request.POST.get("prioridade")
+    data = request.POST.get("data")
+
+    # TODO: REALIZAR VALIDAÇÕES
+    try:
+        tarefa = Tarefa(
+            vaga_id=id_vaga, titulo=titulo, prioridade=prioridade, data=data
+        )
+        tarefa.save()
+        messages.add_message(request, constants.SUCCESS, "Tarefa criada com sucesso")
+        return redirect(f"/vagas/vaga/{id_vaga}")
+    except:
+        messages.add_message(request, constants.ERROR, "Erro interno do sistema")
+        return redirect(f"/vagas/vaga/{id_vaga}")
